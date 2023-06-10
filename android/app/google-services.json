@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "521051837726",
+    "firebase_url": "https://react-my-burger-baf73.firebaseio.com",
+    "project_id": "react-my-burger-baf73",
+    "storage_bucket": "react-my-burger-baf73.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:521051837726:android:c6547f955120d06128250f",
+        "android_client_info": {
+          "package_name": "com.example.boxcricket.box_cricket"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "521051837726-62k6vs3pudrtuspphv8guq8k06jt84qf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.boxcricket.box_cricket",
+            "certificate_hash": "5f70e3a06b1fb9ff41a28663f931f9d23aff170c"
+          }
+        },
+        {
+          "client_id": "521051837726-r8575b624dvf5jt1npf3s6lg7iu3pe7r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7eogfFwVgb_IcJQ_FGtYYOfe5nUSjGGQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "521051837726-r8575b624dvf5jt1npf3s6lg7iu3pe7r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "521051837726-j7cebjs9r67q5jhmn1fd05vopthca8s2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.boxcricket.boxCricket"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
