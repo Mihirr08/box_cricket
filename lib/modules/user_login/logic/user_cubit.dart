@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:box_cricket/modules/owner/logic/owner_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -52,12 +53,28 @@ class UserAuthCubit extends Cubit<UserState> {
     }
   }
 
+
+  Future isOwnerRegistered(String phoneNumber) async{
+    emit(OtpLoading());
+    bool isRegistered = await OwnerProvider().checkIsOwnerRegistered(phoneNumber) ?? false;
+    emit(OtpRegisteredOrNot(isRegistered));
+  }
+
   Future sendPhoneOtp(String phoneNumber, {int? resendToken}) async {
     FirebaseAuth auth = FirebaseAuth.instance;
     emit(OtpLoading());
     try {
-     await auth.verifyPhoneNumber(forceResendingToken: resendToken,
-          phoneNumber: "+1$phoneNumber",
+
+      bool isRegistered =
+          await OwnerProvider().checkIsOwnerRegistered(phoneNumber) ?? false;
+
+      if (isRegistered) {
+        throw Exception("User is already registered");
+      }
+
+      await auth.verifyPhoneNumber(
+          forceResendingToken: resendToken,
+          phoneNumber: "+91$phoneNumber",
           verificationCompleted: (PhoneAuthCredential cred) {},
           verificationFailed: (FirebaseAuthException error) {
             emit(OtpFailed(error?.message ?? ""));
@@ -74,9 +91,11 @@ class UserAuthCubit extends Cubit<UserState> {
   }
 
   Future verifyOtp(
-      {required String verificationId, required String code}) async {
+      {required String verificationId,
+      required String code}) async {
     emit(OtpLoading());
     try {
+
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: verificationId,
         smsCode: code,

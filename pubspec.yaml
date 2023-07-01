@@ -46,7 +46,7 @@ dependencies:
   intl:
   dio: ^5.2.0+1
   http: ^1.0.0
-
+  syncfusion_flutter_charts: ^21.2.10
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -75,6 +75,7 @@ flutter:
   assets:
     - assets/images/logo.jpg
     - assets/images/Checklist.jpg
+    - assets/images/sign-in.jpg
     - assets/images/
     - assets/lottie/
   #   - images/a_dot_ham.jpeg

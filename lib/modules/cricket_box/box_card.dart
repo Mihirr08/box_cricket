@@ -1,8 +1,5 @@
-import 'package:box_cricket/base_widgets/base_hero_widget.dart';
 import 'package:box_cricket/constants/color_constants.dart';
 import 'package:box_cricket/constants/route_constants.dart';
-import 'package:box_cricket/modules/cricket_box/box_detail_screen.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants/asset_constants.dart';
@@ -161,8 +158,8 @@ class _BoxCardState extends State<BoxCard> {
               ),
             ),
             Positioned(
-              bottom: 70,
-              left: 10,
+              right: 10,
+              top: 10,
               child: Container(
                 decoration: BoxDecoration(
                     color: Colors.black45,
@@ -171,7 +168,7 @@ class _BoxCardState extends State<BoxCard> {
                     ),
                     borderRadius: BorderRadius.circular(6)),
                 padding: const EdgeInsets.all(4),
-                child: Text(
+                child: const Text(
                   "Dashing Box Cricket",
                   style: TextStyle(
                     color: Colors.white,

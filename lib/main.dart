@@ -1,10 +1,9 @@
 import 'package:box_cricket/constants/color_constants.dart';
 import 'package:box_cricket/constants/route_constants.dart';
+import 'package:box_cricket/modules/home/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-
 import 'firebase_options.dart';
-import 'modules/owner/provider_sign_up.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,8 +26,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       onGenerateRoute: RouteConstants().onGenerateRoute,
-      home: const ProviderSignUp(),
-      // home: const BoxDetailScreen(indicatorIndex: 1, heroTag: ""),
+      home: const HomePage(),
       theme: ThemeData(
           useMaterial3: true,
           fontFamily: "Pangolin",

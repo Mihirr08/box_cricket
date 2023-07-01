@@ -17,5 +17,6 @@ class AssetConstants {
   static const String profileImage = "assets/images/profileImage.jpeg";
   static const String arrowUp = "assets/images/caret-up-solid.png";
   static const String arrowRight = "assets/images/caret-right-solid.png";
+  static const String signIn = "assets/images/sign-in.jpg";
 
 }

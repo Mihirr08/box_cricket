@@ -14,6 +14,12 @@ class UserSignedIn extends UserState {
 }
 
 class OtpLoading extends UserState {}
+class OtpRegisteredOrNot extends UserState {
+  final bool registered;
+
+  OtpRegisteredOrNot(this.registered);
+}
+
 class OtpVerified extends UserState {
   final UserCredential userCredential;
 

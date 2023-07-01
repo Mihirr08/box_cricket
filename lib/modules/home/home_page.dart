@@ -2,7 +2,6 @@ import 'package:box_cricket/base_widgets/base_text_field.dart';
 import 'package:box_cricket/constants/asset_constants.dart';
 import 'package:box_cricket/constants/color_constants.dart';
 import 'package:box_cricket/modules/cricket_box/box_card.dart';
-import 'package:box_cricket/modules/qr_scanner/qr_code_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';

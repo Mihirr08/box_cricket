@@ -45,6 +45,15 @@ class Validations {
     return null;
   }
 
+  String? address(String? value) {
+    if (value == null || value.isEmpty) {
+      return "Address cannot be empty";
+    } else if (value.length < 6) {
+      return "Address should be of 6 digits";
+    }
+    return null;
+  }
+
   String? username(String? value) {
     if (value == null || value.length < 3) {
       return "Username cannot be empty";
@@ -56,8 +65,10 @@ class Validations {
   String? gmail(String? value) {
     if (value == null || value.length < 3) {
       return "Gmail cannot be empty";
-    }
-
-    return null;
+    } else if (!RegExp(
+            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+        .hasMatch(value)){
+      return "Enter Valid Email";
+    } return null;
   }
 }

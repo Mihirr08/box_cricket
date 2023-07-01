@@ -1,19 +1,19 @@
-import 'dart:io';
-
 import 'package:box_cricket/base_widgets/base_button.dart';
 import 'package:box_cricket/base_widgets/base_snackbar.dart';
 import 'package:box_cricket/base_widgets/base_text_field.dart';
 import 'package:box_cricket/constants/asset_constants.dart';
 import 'package:box_cricket/constants/color_constants.dart';
+import 'package:box_cricket/constants/route_constants.dart';
 import 'package:box_cricket/constants/validations.dart';
 import 'package:box_cricket/modules/cricket_box/box_register.dart';
 import 'package:box_cricket/modules/owner/logic/image_cubit.dart';
 import 'package:box_cricket/modules/user_login/logic/user_cubit.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
+
+import '../../models/OwnerRegistrationModel.dart';
 
 class ProviderSignUp extends StatefulWidget {
   const ProviderSignUp({Key? key}) : super(key: key);
@@ -24,8 +24,6 @@ class ProviderSignUp extends StatefulWidget {
 
 class _ProviderSignUpState extends State<ProviderSignUp> {
   late ImageCubit _providerCubit;
-
-  late List<XFile> _fileImages;
 
   late TextEditingController _ownerNameController;
   late TextEditingController _gmailController;
@@ -40,17 +38,19 @@ class _ProviderSignUpState extends State<ProviderSignUp> {
 
   late GlobalKey<FormState> _formKey;
 
+  late OwnerRegistrationModel _ownerRegistrationModel;
+
   @override
   void initState() {
     super.initState();
     _providerCubit = ImageCubit();
-    _fileImages = <XFile>[];
     _gmailController = TextEditingController();
     _phoneNumberController = TextEditingController();
     _ownerNameController = TextEditingController();
     _otpController = TextEditingController();
     _authCubit = UserAuthCubit();
     _formKey = GlobalKey<FormState>();
+    _ownerRegistrationModel = OwnerRegistrationModel();
   }
 
   @override
@@ -75,14 +75,23 @@ class _ProviderSignUpState extends State<ProviderSignUp> {
               child: BlocConsumer(
                 bloc: _authCubit,
                 listener: (context, state) {
-                  print("State is $state");
                   if (state is OtpSent) {
+                    _verificationId = state.verificationId;
                     _verificationId = state.verificationId;
                     ScaffoldMessenger.of(context).showSnackBar(baseSnackBar(
                         text: "OTP sent to +91${_phoneNumberController.text}"));
                     setState(() {
                       _isVerifying = true;
                     });
+                  } else if (state is OtpVerified) {
+                    _ownerRegistrationModel.ownerName =
+                        _ownerNameController.text;
+                    _ownerRegistrationModel.ownerPhone =
+                        _phoneNumberController.text;
+                    _ownerRegistrationModel.ownerEmail = _gmailController.text;
+
+                    Navigator.pushNamed(context, RouteConstants.boxRegistration,
+                        arguments: _ownerRegistrationModel);
                   } else if (state is OtpFailed) {
                     print("State error is ${state.error}");
                     ScaffoldMessenger.of(context)
@@ -91,31 +100,33 @@ class _ProviderSignUpState extends State<ProviderSignUp> {
                 },
                 builder: (context, state) {
                   if (state is OtpLoading) {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Sending OTP......",style: TextStyle(fontSize: 18),),
-                      Lottie.asset(AssetConstants.otpLoading, height: 200),
-                    ],
-                  );
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Lottie.asset(AssetConstants.otpLoading, height: 200),
+                      ],
+                    );
                   }
                   return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.3,
-                          child: Column(
-                            children: [
-                              Expanded(
-                                  child: Image.asset(
-                                      AssetConstants.checkListImage)),
-                              const Center(
-                                child: Text(
-                                  "Owner Registration",
-                                  style: TextStyle(fontSize: 24),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.3,
+                            child: Column(
+                              children: [
+                                Expanded(
+                                    child: Image.asset(
+                                        AssetConstants.checkListImage)),
+                                const Center(
+                                  child: Text(
+                                    "Owner Registration",
+                                    style: TextStyle(fontSize: 24),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                         Expanded(
@@ -209,31 +220,31 @@ class _ProviderSignUpState extends State<ProviderSignUp> {
                                     ],
                                   );
                                 }),
+                                if (_isVerifying)
+                                  BaseTextField(
+                                    isEnabled: state is! OtpVerified,
+                                    controller: _otpController,
+                                    maxLen: 6,
+                                    keyboardType: TextInputType.number,
+                                    hintText: "Enter otp here",
+                                    suffixIcon: TextButton(
+                                        onPressed: () {
+                                          if (_otpController.text.length == 6) {
+                                            _authCubit.verifyOtp(
+                                                verificationId:
+                                                    _verificationId ?? "",
+                                                code: _otpController.text);
+                                          }
+                                        },
+                                        child: (state is OtpVerified)
+                                            ? const Icon(
+                                                Icons.verified,
+                                                color:
+                                                    ColorConstants.primaryColor,
+                                              )
+                                            : const Text("Verify otp")),
+                                  ),
                               ]),
-                              if (_isVerifying)
-                                BaseTextField(
-                                  isEnabled: state is! OtpVerified,
-                                  controller: _otpController,
-                                  maxLen: 6,
-                                  keyboardType: TextInputType.number,
-                                  hintText: "Enter otp here",
-                                  suffixIcon: TextButton(
-                                      onPressed: () {
-                                        if (_otpController.text.length == 6) {
-                                          _authCubit.verifyOtp(
-                                              verificationId:
-                                                  _verificationId ?? "",
-                                              code: _otpController.text);
-                                        }
-                                      },
-                                      child: (state is OtpVerified)
-                                          ? const Icon(
-                                              Icons.verified,
-                                              color:
-                                                  ColorConstants.primaryColor,
-                                            )
-                                          : const Text("Verify otp")),
-                                ),
                               Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 18.0),
@@ -244,7 +255,22 @@ class _ProviderSignUpState extends State<ProviderSignUp> {
                                             : Colors.grey,
                                     onTap: ((state is OtpVerified) &&
                                             _isVerifying)
-                                        ? () {}
+                                        ? () {
+                                            _ownerRegistrationModel.ownerEmail =
+                                                _gmailController.text;
+                                            _ownerRegistrationModel.ownerPhone =
+                                                _phoneNumberController.text;
+                                            _ownerRegistrationModel.ownerName =
+                                                _ownerNameController.text;
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        BoxRegister(
+                                                          ownerRegistrationModel:
+                                                              _ownerRegistrationModel,
+                                                        )));
+                                          }
                                         : () {
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(const SnackBar(
@@ -253,11 +279,6 @@ class _ProviderSignUpState extends State<ProviderSignUp> {
                                               backgroundColor:
                                                   ColorConstants.primaryColor,
                                             ));
-                                            Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const BoxRegister()));
                                           },
                                     text: "Next",
                                     width: double.infinity),

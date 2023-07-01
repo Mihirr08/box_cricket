@@ -3,18 +3,23 @@ import 'dart:io';
 import 'package:box_cricket/base_widgets/base_button.dart';
 import 'package:box_cricket/base_widgets/base_hero_widget.dart';
 import 'package:box_cricket/base_widgets/base_snackbar.dart';
+import 'package:box_cricket/constants/color_constants.dart';
 import 'package:box_cricket/constants/validations.dart';
 import 'package:box_cricket/modules/cricket_box/box_slots.dart';
 import 'package:box_cricket/modules/owner/logic/image_cubit.dart';
 import 'package:box_cricket/modules/owner/provider_sign_up.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../base_widgets/base_text_field.dart';
+import '../../models/OwnerRegistrationModel.dart';
 
 class BoxRegister extends StatefulWidget {
-  const BoxRegister({Key? key}) : super(key: key);
+  const BoxRegister({Key? key, required this.ownerRegistrationModel})
+      : super(key: key);
+  final OwnerRegistrationModel ownerRegistrationModel;
 
   @override
   _BoxRegisterState createState() => _BoxRegisterState();
@@ -27,11 +32,13 @@ class _BoxRegisterState extends State<BoxRegister> {
 
   late TextEditingController _boxNameController;
   late TextEditingController _boxAddressController;
+  late TextEditingController _boxAmenitiesController;
   late TextEditingController _areaController;
   late TextEditingController _cityController;
   late TextEditingController _stateController;
   late TextEditingController _landmarkController;
   late GlobalKey<FormState> _formKey;
+  late OwnerRegistrationModel _ownerRegistrationModel;
 
   @override
   void initState() {
@@ -40,11 +47,13 @@ class _BoxRegisterState extends State<BoxRegister> {
     _fileImages = [];
     _boxNameController = TextEditingController();
     _boxAddressController = TextEditingController();
+    _boxAmenitiesController = TextEditingController();
     _areaController = TextEditingController();
     _cityController = TextEditingController();
     _stateController = TextEditingController();
     _landmarkController = TextEditingController();
     _formKey = GlobalKey<FormState>();
+    _ownerRegistrationModel = widget.ownerRegistrationModel;
   }
 
   @override
@@ -60,16 +69,23 @@ class _BoxRegisterState extends State<BoxRegister> {
 
   @override
   Widget build(BuildContext context) {
+    print("Model is ${_ownerRegistrationModel.toJson()}");
     return Scaffold(
+      appBar: AppBar(
+          title:
+              const Text("Box Registration", style: TextStyle(fontSize: 22))),
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(
-              child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.2,
-            child: const Center(
-                child:
-                    Text("Box Registration", style: TextStyle(fontSize: 22))),
-          )),
+          // SliverToBoxAdapter(
+          //     child: Padding(
+          //   padding: const EdgeInsets.all(8.0),
+          //   child: SizedBox(
+          //     height: MediaQuery.of(context).size.height * 0.1,
+          //     child: const Center(
+          //         child:
+          //             Text("Box Registration", style: TextStyle(fontSize: 22))),
+          //   ),
+          // )),
           SliverFillRemaining(
             hasScrollBody: false,
             child: Padding(
@@ -77,6 +93,7 @@ class _BoxRegisterState extends State<BoxRegister> {
               child: Form(
                 key: _formKey,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _getTextField(
@@ -84,9 +101,9 @@ class _BoxRegisterState extends State<BoxRegister> {
                         labelText: "Box Name",
                         controller: _boxNameController),
                     _getTextField(
-                        minLines: 3,
+                        minLines: 1,
                         maxLines: 5,
-                        validator: Validations().boxNameValidation,
+                        validator: Validations().address,
                         labelText: "Address",
                         controller: _boxAddressController),
                     Row(
@@ -128,9 +145,20 @@ class _BoxRegisterState extends State<BoxRegister> {
                                 labelText: "State",
                                 controller: _stateController),
                           ),
-                        )
+                        ),
                       ],
                     ),
+                    _getTextField(
+                        minLines: 1,
+                        // maxLines: 1,
+                        // validator: Validations().address,
+                        labelText: "Amenities",
+                        hintText: "Bat, Ball, Stumps....",
+                        leadingIcon: const Icon(
+                          Icons.sports_cricket,
+                          color: ColorConstants.primaryColor,
+                        ),
+                        controller: _boxAmenitiesController),
                     BlocBuilder(
                       bloc: _imageCubit,
                       builder: (context, state) {
@@ -249,9 +277,29 @@ class _BoxRegisterState extends State<BoxRegister> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 18.0),
           child: BaseButton(
-              onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const BoxSlots()));
+              onTap: () async {
+                _ownerRegistrationModel.boxCricketState = _stateController.text;
+                _ownerRegistrationModel.boxCricketName =
+                    _boxNameController.text;
+                _ownerRegistrationModel.boxCricketLandmark =
+                    _landmarkController.text;
+                _ownerRegistrationModel.boxCricketAddress =
+                    _boxAddressController.text;
+                _ownerRegistrationModel.boxCricketCity = _cityController.text;
+                _ownerRegistrationModel.boxCricketFacilities =
+                    _boxAmenitiesController.text;
+
+                _ownerRegistrationModel.boxCricketArea = _areaController.text;
+
+                _ownerRegistrationModel.files =
+                    _fileImages.map((e) => File(e.path)).toList();
+
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => BoxSlots(
+                              ownerRegistrationModel: _ownerRegistrationModel,
+                            )));
               },
               text: "Next",
               width: double.infinity),
@@ -288,14 +336,13 @@ class _BoxRegisterState extends State<BoxRegister> {
                           padding: const EdgeInsets.all(8.0),
                           child: BaseButton(
                               onTap: () {
-                                Navigator.pop(dialogContext,false);
-
+                                Navigator.pop(dialogContext, false);
                               },
                               text: "Gallery"),
                         ),
                         BaseButton(
                             onTap: () {
-                            Navigator.pop(dialogContext,true);
+                              Navigator.pop(dialogContext, true);
                             },
                             text: "Camera"),
                       ]),
@@ -306,11 +353,11 @@ class _BoxRegisterState extends State<BoxRegister> {
             ),
           );
         }).then((isCamera) {
-          if(isCamera == true){
-            _imageCubit.cameraImage();
-          }else if(isCamera == false){
-            _imageCubit.pickImage();
-          }
+      if (isCamera == true) {
+        _imageCubit.cameraImage();
+      } else if (isCamera == false) {
+        _imageCubit.pickImage();
+      }
     });
   }
 
@@ -331,11 +378,8 @@ class _BoxRegisterState extends State<BoxRegister> {
                         topLeft: Radius.circular(20),
                         topRight: Radius.circular(20),
                       ),
-                      child: BaseHeroWidget(
-                        tag: "boxImage",
-                        child: Image.file(
-                          File(path),
-                        ),
+                      child: Image.file(
+                        File(path),
                       ),
                     ),
                     SizedBox(

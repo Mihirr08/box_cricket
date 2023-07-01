@@ -1,16 +1,21 @@
 import 'dart:developer';
 
 import 'package:box_cricket/base_widgets/base_button.dart';
-import 'package:box_cricket/base_widgets/base_hero_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../constants/asset_constants.dart';
 import '../../constants/color_constants.dart';
 
+class BoxSlotModel {
+  List<String> slotList;
+  List<String> selectedSlotList;
+
+  BoxSlotModel({required this.slotList, required this.selectedSlotList});
+}
+
 class BoxDetailScreen extends StatefulWidget {
-  const BoxDetailScreen(
-      {Key? key, required this.indicatorIndex})
+  const BoxDetailScreen({Key? key, required this.indicatorIndex})
       : super(key: key);
   final int indicatorIndex;
 
@@ -23,10 +28,12 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
 
   late int _indicatorIndex;
 
-  late List<int> _timings;
-  late List<int> _selectedTimings;
+  // late List<String> _timings;
+  late List<String> _selectedTimings;
 
-  int _selectedDate = 24;
+  String? _selectedDate;
+
+  late Map<String, BoxSlotModel> _slotsMap;
 
   bool _turnsUp = true;
 
@@ -35,24 +42,55 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
     super.initState();
     _pageController = PageController(initialPage: widget.indicatorIndex);
     _indicatorIndex = widget.indicatorIndex;
-    _timings = [];
+    // _timings = [];
     _selectedTimings = [];
 
-    DateTime _date = DateTime(2022, 12, 1, 24, 00);
-    log("Hour is ${_date.hour}");
+    DateTime date = DateTime(2022, 12, 1, 24, 00);
+    log("Hour is ${date.hour}");
 
-    while (_date.hour >= 0) {
-      print("Hour is ${_date.hour}");
-      _timings.add(_date.millisecondsSinceEpoch);
+    // while (date.hour >= 0) {
+    //   print("Hour is ${date.hour}");
+    //   _timings.add(date.toIso8601String());
+    //
+    //   date = date.add(const Duration(minutes: 30));
+    //   print("Hour after is ${date.hour}");
+    //   if (date.hour == 0 && date.minute == 0) {
+    //     break;
+    //   }
+    // }
+    // // _selectedTimings.addAll(_timings);
+    // log("list is $_timings ${_timings.length}");
+    _setMap();
+  }
 
-      _date = _date.add(const Duration(minutes: 30));
-      print("Hour after is ${_date.hour}");
-      if (_date.hour == 0 && _date.minute == 0) {
-        break;
+  void _setMap() {
+    DateTime dateTimeNow = DateTime.now();
+
+    _slotsMap = {};
+    for (int i = 0; i < 7; i++) {
+      DateTime currentDate =
+          DateTime.parse(dateTimeNow.add(Duration(days: i)).toIso8601String());
+
+      DateTime date = DateTime(
+          currentDate.year, currentDate.month, currentDate.day, 24, 00);
+      List<String> timings = [];
+      log("Hour is ${date.hour}");
+
+      while (date.hour >= 0) {
+        print("Hour is ${date.hour}");
+        timings.add(date.subtract(const Duration(days: 1)).toIso8601String());
+
+        date = date.add(const Duration(minutes: 30));
+        print("Hour after is ${date.hour}");
+        if (date.hour == 0 && date.minute == 0) {
+          break;
+        }
       }
+
+      _slotsMap[currentDate.toIso8601String()] =
+          BoxSlotModel(slotList: timings.toList(), selectedSlotList: []);
     }
-    // _selectedTimings.addAll(_timings);
-    log("list is $_timings ${_timings.length}");
+    _selectedDate = _slotsMap.keys.first;
   }
 
   @override
@@ -137,7 +175,9 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
                     child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: List.generate(20, (index) => _getDateCard(index)),
+                    children: List.generate(_slotsMap.keys.length, (index) {
+                      return _getDateCard(index);
+                    }),
                   ),
                 )),
                 SliverToBoxAdapter(
@@ -151,9 +191,14 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
                   ),
                 ),
                 SliverGrid(
-                    delegate: SliverChildBuilderDelegate(childCount: 48,
+                    delegate: SliverChildBuilderDelegate(
+                        childCount:
+                            (_slotsMap[_selectedDate]?.slotList)?.length ?? 0,
                         (context, index) {
-                      return _getSlotCard(_timings[index]);
+                      return _getSlotCard(_slotsMap[_selectedDate]
+                              ?.slotList[index]
+                              .toString() ??
+                          "");
                     }),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
@@ -206,6 +251,20 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
                 ),
                 child: Column(
                   children: [
+                    // if (!_turnsUp)
+                    //   Row(
+                    //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    //     children: [
+                    //       TextButton(
+                    //         onPressed: () {},
+                    //         child: const Text("Close"),
+                    //       ),
+                    //       TextButton(
+                    //         onPressed: () {},
+                    //         child: const Text("Clear All"),
+                    //       ),
+                    //     ],
+                    //   ),
                     Expanded(
                         child: ListView(children: [
                       ...List.generate(_selectedTimings.length, (index) {
@@ -277,10 +336,11 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
   }
 
   Widget _slotItemWidget(int index) {
-    int slotTime = _selectedTimings[index];
+    int slotTime =
+        DateTime.parse(_selectedTimings[index]).millisecondsSinceEpoch;
     DateTime date = DateTime.fromMillisecondsSinceEpoch(slotTime);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 18),
       child: Container(
         height: 80,
         decoration: BoxDecoration(
@@ -296,13 +356,21 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                    "${DateFormat("hh:mm a").format(date)} - ${DateFormat("hh:mm a").format(
-                      date.add(
-                        const Duration(minutes: 30),
-                      ),
-                    )}",
-                    style: const TextStyle(fontSize: 18)),
+                RichText(
+                    text: TextSpan(
+                        text:
+                            "${DateFormat("hh:mm a").format(date)} - ${DateFormat("hh:mm a").format(
+                          date.add(
+                            const Duration(minutes: 30),
+                          ),
+                        )}",
+                        style:
+                            const TextStyle(fontSize: 18, color: Colors.black),
+                        children: [
+                      TextSpan(
+                          text: DateFormat(" (dd/MMM)").format(date),
+                          style: const TextStyle(fontSize: 16))
+                    ])),
                 const Row(
                   children: [
                     Icon(
@@ -333,12 +401,14 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
   }
 
   Widget _getDateCard(int index) {
+    bool isSelected = _selectedDate == _slotsMap.keys.elementAt(index);
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: InkWell(
         onTap: () {
           setState(() {
-            _selectedDate = 24 + index;
+            _selectedDate = _slotsMap.keys.elementAt(index);
+            print(_slotsMap);
           });
         },
         child: Container(
@@ -346,9 +416,7 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
             border: Border.all(
               color: ColorConstants.primaryColor,
             ),
-            color: _selectedDate == (24 + index)
-                ? ColorConstants.primaryColor
-                : null,
+            color: isSelected ? ColorConstants.primaryColor : null,
             borderRadius: BorderRadius.circular(12),
           ),
           height: 80,
@@ -356,20 +424,28 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "${24 + index}",
-                style: TextStyle(
-                    color: _selectedDate == (24 + index)
-                        ? Colors.white
-                        : ColorConstants.primaryColor,
-                    fontSize: 18),
+              RichText(
+                text: TextSpan(
+                    text: DateFormat("dd").format(
+                        DateTime.parse(_slotsMap.keys.elementAt(index))),
+                    style: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : ColorConstants.primaryColor,
+                        fontSize: 18),
+                    children: [
+                      TextSpan(
+                          text: DateFormat(" (MMM)").format(
+                              DateTime.parse(_slotsMap.keys.elementAt(index))),
+                          style: const TextStyle(fontSize: 12)),
+                    ]),
               ),
               Text(
-                "Mar",
+                DateFormat("EEE")
+                    .format(DateTime.parse(_slotsMap.keys.elementAt(index))),
                 style: TextStyle(
-                    color: _selectedDate == (24 + index)
-                        ? Colors.white
-                        : ColorConstants.primaryColor,
+                    color:
+                        isSelected ? Colors.white : ColorConstants.primaryColor,
                     fontSize: 14),
               ),
             ],
@@ -379,8 +455,8 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
     );
   }
 
-  Widget _getSlotCard(int time) {
-    DateTime date = DateTime.fromMillisecondsSinceEpoch(time);
+  Widget _getSlotCard(String time) {
+    DateTime date = DateTime.parse(time);
     bool isSelected = _selectedTimings.contains(time);
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -388,8 +464,13 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
         child: InkWell(
           onTap: () {
             if (_selectedTimings.contains(time)) {
+              print("Removed is $time");
               _selectedTimings.remove(time);
             } else {
+              if (_selectedTimings.isEmpty) {
+                _turnsUp = true;
+              }
+              print("Added is $time");
               _selectedTimings.add(time);
             }
             setState(() {});
